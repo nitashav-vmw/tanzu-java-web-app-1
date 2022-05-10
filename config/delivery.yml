@@ -11,17 +11,22 @@ spec:
   template:
     metadata:
       annotations:
+        apps.tanzu.vmware.com/live-update: "true"
+        autoscaling.knative.dev/maxScale: "1"
         autoscaling.knative.dev/minScale: "1"
-        boot.spring.io/actuator: http://:8080/actuator
+        boot.spring.io/actuator: http://:8081/actuator
         boot.spring.io/version: 2.5.8
         conventions.apps.tanzu.vmware.com/applied-conventions: |-
-          appliveview-sample/app-live-view-connector
-          appliveview-sample/app-live-view-appflavours
-          appliveview-sample/app-live-view-systemproperties
+          developer-conventions/live-update-convention
+          developer-conventions/add-source-image-label
           spring-boot-convention/spring-boot
           spring-boot-convention/spring-boot-graceful-shutdown
           spring-boot-convention/spring-boot-web
           spring-boot-convention/spring-boot-actuator
+          appliveview-sample/app-live-view-connector
+          appliveview-sample/app-live-view-appflavours
+          appliveview-sample/app-live-view-systemproperties
+        developer.apps.tanzu.vmware.com/image-source-digest: harbor.contour.e2e.corby.cc/tap/tanzu-java-web-app-source:latest@sha256:8908e229ff05fb7d6619b7bee60da9423bfb7fb36145c02d553d32674fe7cce4
         developer.conventions/target-containers: workload
       labels:
         app.kubernetes.io/component: run
@@ -30,14 +35,15 @@ spec:
         carto.run/workload-name: tanzu-java-web-app
         conventions.apps.tanzu.vmware.com/framework: spring-boot
         tanzu.app.live.view: "true"
+        tanzu.app.live.view.application.actuator.port: "8081"
         tanzu.app.live.view.application.flavours: spring-boot
         tanzu.app.live.view.application.name: demo
     spec:
       containers:
       - env:
         - name: JAVA_TOOL_OPTIONS
-          value: -Dmanagement.endpoint.health.show-details="always" -Dmanagement.endpoints.web.base-path="/actuator" -Dmanagement.endpoints.web.exposure.include="*" -Dmanagement.server.port="8080" -Dserver.port="8080" -Dserver.shutdown.grace-period="24s"
-        image: harbor.contour.e2e.corby.cc/tap/supply-chain/tanzu-java-web-app-default@sha256:1d248458958fb49f6cf19162fd0c4c11efba613d3b22e0905f61b23550506e34
+          value: -Dmanagement.endpoint.health.probes.add-additional-paths="true" -Dmanagement.endpoint.health.show-details=always -Dmanagement.endpoints.web.base-path="/actuator" -Dmanagement.endpoints.web.exposure.include=* -Dmanagement.health.probes.enabled="true" -Dmanagement.server.port="8081" -Dserver.port="8080" -Dserver.shutdown.grace-period="24s"
+        image: harbor.contour.e2e.corby.cc/tap/supply-chain/tanzu-java-web-app-default@sha256:57ae17af85a9552a87757e2677fc429a3519d963c654e4acb83fc0e3bf4de75c
         name: workload
         ports:
         - containerPort: 8080
